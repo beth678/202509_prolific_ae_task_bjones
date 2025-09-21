@@ -1,0 +1,31 @@
+--validations 
+-- all chargebacks have a resolution row?
+
+--Assumption - to validate with Finance Team 
+
+   -- Fraudulent transactions should not be included in the revenue calculations
+   -- The platform fee is added to chargebacks
+   -- chargeback conversion should be applied on the resolution date not the transaction date - i.e. treat resolution date as transaction date for chargebacks, 
+     - and resolution date is the date on which the transaction is realised for revenue calculations
+     --Question - what happens if a chargeback is resolved after the end of the contract?
+
+-- Assumption - 
+    -- once contract spending threshold reached, discounted fee margin is applied to all following transactions (i.e. not backdated) and overwrites the transaction level platform_fee_margin
+    -- 
+
+-- Assumption - platform_fee_margin is a percentage stored as a decimal (i.e. 0.2 = 20%)
+-- Assume Spend threshold includes only payments and does not account for refunds or chargebacks & excludes fraudulent transactions
+
+-- Assume only one contract is can be in place per client in one time period
+--Assume contract ends on last day of month
+--Assume its a valid state to have a client with no contract
+--Assume if spend threshold is reached on one day, discount is applied on all transactions from the next day based on the transaction_date (including all transaction types)
+-- Assume fees charged on every transaction - payment, fraud, refund, or chargeback count towards our revenue - assume this is a platform processing transactions, these aren't transactions with our business
+
+
+TODO: doc blocks to tody up documentation
+TODO: Customise tests
+TODO: Fix Sources (not from seeds)
+TODO: EXCLUDE INCOMPLETE MONTHS & check for months with no conversion data
+
+

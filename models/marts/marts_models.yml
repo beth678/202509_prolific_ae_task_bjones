@@ -1,0 +1,52 @@
+version: 2 
+
+models:  
+  - name: prd_client_realised_transactions_daily 
+    description: |
+      A daily total of realised transactions split per client and per transaction type, 
+      including a cumulative sum of payments and indication if a particular day was after spend threshold reached & therefore discounts applied. 
+      To be used for spend threshold tracking & discount application status"
+    columns: 
+      - name: client_id
+        description: "Unique identifier for the client"
+      - name: contract_id
+        description: "Unique identifier for the contract (null if no contract in place for the day)"
+      - name: spend_threshold
+        description: "The threshold (in GBP) for platform spend beyond which discounts may be applied to fees charged"
+      - name: transaction_realised_date
+        description: "The day which the totals are for"
+      - name: transaction_type
+        description: "Type of the transaction (payment, refund, chargeback or fraud)"
+      - name: spend_threshold_reached
+        description: "Boolean descriptor for whether the day is after the spend threshold was reached for a client contract. Null if the transaction occured outside of a contract."
+      - name: total_transaction_amount_gbp
+        description: "Total amount of transactions of that type for that day"
+      - name: total_fees_charged_gbp
+        description: "Total amount of fees charged for transactions of that type for that day (taking into account discounts applied)"
+      - name: cumulative_daily_contract_spend_gbp
+        description: "Cumulative sum of all payment transactions within a contract over time."
+
+  - name: prd_client_revenue_monthly
+    description: "Monthly total of fees charged per client"
+    columns:
+      - name: client_id
+        description: Unique Id for the client
+      - name: transaction_realised_month
+        description: The month which the totals are for
+      - name: total_fees_income_gbp
+        description: Total income from fees on all transaction types in gbp
+      - name: total_gmv
+        description: Gross Merchandise Value (total payment amount not accounting for refunds, chargebacks or fraud) for the Client for the month
+
+  - name: prd_revenue_monthly
+    description: "Monthly total of payments (not accounting for fraud, chargeback, refunds) across the whole platform"
+    columns:
+      - name: transaction_realised_month
+        description: The month which the totals are for
+        tests:
+          - unique
+          - not_null
+      - name: total_gmv
+        description: Gross Merchandise Value (total payment amount not accounting for refunds, chargebacks or fraud) for the Client for the month
+
+

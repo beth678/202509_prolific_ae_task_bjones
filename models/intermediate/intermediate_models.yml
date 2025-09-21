@@ -1,0 +1,84 @@
+version: 2 
+
+models:  
+  - name: int_transactions 
+    description: "Intermediate model to convert to GBP based on date on which the transaction was realised"
+    columns: 
+      - name: transaction_id
+        description: "Unique identifier for each transaction"
+        tests:  
+          - not_null
+          - unique
+      - name: client_id
+        description: "ID of the client owner of the transaction"
+      - name: original_transaction_amount
+        description: "Amount of the transaction in the original currency"
+      - name: transaction_amount_gbp
+        description: "Amount of the transaction in GBP. Note if the chargeback is not resolved, the transaction_amount_gbp will be null"
+      - name: transaction_type
+        description: "Type of the transaction (payment, refund, chargeback or fraud)"
+      - name: chargeback_resolution_status
+        description: "For chargeback transactions, a description of whether the chargeback is resolved or pending"
+      - name: transaction_date
+        description: "Transaction Date (UTC)"
+      - name: transaction_realised_date
+        description: "Date on which the transaction was 'realised' - for chargebacks this is the resolution date, for all other transaction types this is the transaction date"  
+      - name: platform_fee_margin
+        description: "Percentage (stored as a decimal) charged for the transaction on the platform. Stored at the transaction level."
+      - name: original_currency
+        description: "3 letter ISO code of the original currency of the transaction"
+      - name: linked_transaction_id
+        description: "For refund transactions, a link to the parent payment"
+  
+  - name: int_client_contracts
+    description: "Details of Client Contracts & related discounts"
+    columns: 
+      - name: contract_id
+        description: "Unique identifier for the contract, a concatenation of the client_id and contract start date"
+        tests:
+          - not_null
+          - unique 
+      - name: client_id
+        description: "ID of the client owner of the contract"
+      - name: contract_start_date
+        description: "Date of the contract start"
+      - name: contract_end_date
+        description: "Date of the contract end (assume end of the month of the month of contract duration end)"
+        tests:
+          - not_null
+      - name: contract_duration_months
+        description: "Duration of the contract in months"
+      - name: spend_threshold
+        description: "The threshold (in GBP) for platform spend beyond which discounts may be applied to fees charged"
+      - name: discounted_fee_margin
+        description: "Percentage (stored as a decimal) charged for the transaction on the platform for any transactions beyond the spend threshold of the contract."
+      
+  - name: int_client_transactions
+    description: "Details of Client transactions and associated fees paid according to contract spend thresholds"
+    columns: 
+      - name: client_id
+        description: "Unique identifier for the client"
+      - name: contract_id
+        description: "Unique identifier for the contract, a concatenation of the client_id and contract start date"
+      - name: spend_threshold
+        description: "The threshold (in GBP) for platform spend beyond which discounts may be applied to fees charged"
+      - name: discounted_fee_margin
+        description: "Percentage (stored as a decimal) charged for the transaction on the platform for any transactions beyond the spend threshold of the contract."
+      - name: transaction_amount_gbp
+        description: "The transaction amount (in GBP)"
+      - name: platform_fee_margin
+        description: "Percentage (stored as a decimal) charged for the transaction on the platform (may be overwritten if a discount is applied)"
+      - name: transaction_date
+        description: "Date of the transaction"
+      - name: transaction_realised_date
+        description: "Date on which the transaction was 'realised' - for chargebacks this is the resolution date, for all other transaction types this is the transaction date"
+      - name: transaction_type
+        description: "Type of the transaction (payment, refund, chargeback or fraud)"
+      - name: cumulative_contract_spend_gbp
+        description: "Cumulative sum of all payment transactions within a contract over time. Used to calculate spend thresholds being breached"
+      - name: chargeback_resolution_status
+        description: "Status of the chargeback transaction"
+      - name: spend_threshold_reached
+        description: "Boolean descriptor for whether the transaction occured after the spend threshold was reached for a client contract. Null if the transaction occured outside of a contract."
+      - name: fees_charged
+        description: "Fees chaged for the transaction based on the platform fee margin and discounted fee margin if the spend threshold was reached"
