@@ -1,0 +1,102 @@
+version: 2 
+
+models:  
+  - name: stg_transactions 
+    description: "All platform transactions including Payments, Refunds, Chargebacks and Fraud"
+    columns: 
+      - name: transaction_id
+        description: "Unique identifier for each transaction"
+        tests:  
+          - not_null
+          - unique
+      - name: client_id
+        description: "ID of the client owner of the transaction"
+        tests:
+          - not_null
+      - name: transaction_amount
+        description: "Amount of the transaction in the original currency"
+        tests:
+          - not_null
+      - name: transaction_type
+        description: "Type of the transaction (payment, refund, chargeback or fraud)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['payment','refund', 'fraud', 'chargeback']
+      - name: transaction_date
+        description: "Transaction Date (UTC)"
+        tests:
+          - not_null
+      - name: platform_fee_margin
+        description: "Percentage (stored as a decimal) charged for the transaction on the platform. Stored at the transaction level."
+        tests:
+          - not_null
+      - name: currency
+        description: "Currency (3 letter ISO code)"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_currency_rates')
+              field: currency
+      - name: linked_transaction_id
+        description: "For refund transactions, a link to the parent payment"
+        tests:
+          - relationships:
+              to: ref('stg_transactions')
+              field: transaction_id
+
+  - name: stg_client_contracts
+    description: "Details of Client Contracts & related discounts"
+    columns:  
+      - name: client_id
+        description: "ID of the client owner of the contract"
+        tests:
+          - not_null
+      - name: contract_start_date
+        description: "Date of the contract start"
+        tests:
+          - not_null
+      - name: contract_duration_months
+        description: "Duration of the contract in months"
+        tests:
+          - not_null
+      - name: spend_threshold
+        description: "The threshold (in GBP) for platform spend beyond which discounts may be applied to fees charged"
+      - name: discounted_fee_margin
+        description: "Percentage (stored as a decimal) charged for the transaction on the platform for any transactions beyond the spend threshold of the contract."
+
+  - name: stg_currency_rates
+    description: "Reference data for currency conversion to GBP"
+    columns: 
+      - name: currency
+        description: "ISO 3 letter code for the currency"
+        tests:
+          - not_null
+      - name: rate_date
+        description: "Date of the currency conversion value"
+        tests:
+          - not_null
+      - name: exchange_rate_to_gbp
+        description: "Exchange rate stored as a decimal for conversion to GBP"
+        tests:
+          - not_null
+          #TODO: Add custom test for every day being available
+
+  - name: stg_transaction_resolutions
+    description: "Information relating to resolution of chargeback transactions. Transaction may be resolved or pending resolution"
+    columns: 
+      - name: transaction_id
+        description: "Unique identifier for the transaction"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_transactions')
+              field: transaction_id
+      - name: resolution_status
+        description: "Status of the chargeback transaction"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['resolved', 'pending']
+      - name: resolution_date
+        description: "Date of resolution of the chargeback. Null if still pending"
